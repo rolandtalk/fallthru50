@@ -77,17 +77,18 @@
           <table>
             <thead>
               <tr>
+                <th class="rank">#</th>
                 <th data-sort-header="symbol" aria-sort="none"><button class="sort-button" type="button" data-sort="symbol">Symbol <span class="sort-indicator" aria-hidden="true"></span></button></th>
-                <th class="number value-column" data-sort-header="marketValue" aria-sort="descending"><button class="sort-button" type="button" data-sort="marketValue" aria-label="Holding value">Value <span class="sort-indicator" aria-hidden="true">↓</span></button></th>
-                <th class="status-column" data-sort-header="status" aria-sort="none"><button class="sort-button" type="button" data-sort="status">Status <span class="sort-indicator" aria-hidden="true"></span></button></th>
-                <th class="number latest-column" data-sort-header="latestClose" aria-sort="none"><button class="sort-button" type="button" data-sort="latestClose">Latest <span class="sort-indicator" aria-hidden="true"></span></button></th>
-                <th class="number ma50-column" data-sort-header="latestMa50" aria-sort="none"><button class="sort-button" type="button" data-sort="latestMa50">MA50 <span class="sort-indicator" aria-hidden="true"></span></button></th>
-                <th class="number distance-column" data-sort-header="distancePct" aria-sort="none"><button class="sort-button" type="button" data-sort="distancePct">vs MA50 <span class="sort-indicator" aria-hidden="true"></span></button></th>
-                <th class="sessions-column">Latest 3 Sessions</th>
+                <th class="number" data-sort-header="marketValue" aria-sort="descending"><button class="sort-button" type="button" data-sort="marketValue">Market Value <span class="sort-indicator" aria-hidden="true">↓</span></button></th>
+                <th data-sort-header="status" aria-sort="none"><button class="sort-button" type="button" data-sort="status">Status <span class="sort-indicator" aria-hidden="true"></span></button></th>
+                <th class="number" data-sort-header="latestClose" aria-sort="none"><button class="sort-button" type="button" data-sort="latestClose">Latest <span class="sort-indicator" aria-hidden="true"></span></button></th>
+                <th class="number" data-sort-header="latestMa50" aria-sort="none"><button class="sort-button" type="button" data-sort="latestMa50">MA50 <span class="sort-indicator" aria-hidden="true"></span></button></th>
+                <th class="number" data-sort-header="distancePct" aria-sort="none"><button class="sort-button" type="button" data-sort="distancePct">vs MA50 <span class="sort-indicator" aria-hidden="true"></span></button></th>
+                <th>Latest 3 Sessions</th>
               </tr>
             </thead>
             <tbody id="results-body">
-              <tr><td class="loading-cell" colspan="7"><span class="spinner"></span>Running scan…</td></tr>
+              <tr><td class="loading-cell" colspan="8"><span class="spinner"></span>Running scan…</td></tr>
             </tbody>
           </table>
         </div>
