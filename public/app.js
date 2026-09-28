@@ -39,6 +39,17 @@ function money(value) {
   }).format(value)
 }
 
+function compactMoney(value) {
+  if (!Number.isFinite(value)) return '—'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    notation: 'compact',
+    compactDisplay: 'short',
+    maximumFractionDigits: value >= 1_000_000 ? 2 : 0,
+  }).format(value)
+}
+
 function price(value) {
   if (!Number.isFinite(value)) return '—'
   return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -124,14 +135,13 @@ function render() {
     const distance = row.distancePct == null ? '—' : `${row.distancePct > 0 ? '+' : ''}${row.distancePct.toFixed(2)}%`
     return `
       <tr class="stock-row" data-symbol="${escapeHtml(row.symbol)}" tabindex="0" title="Open ${escapeHtml(row.symbol)} price and MA50 curve">
-        <td class="rank">${row.rank}</td>
         <td class="symbol">${escapeHtml(row.symbol)}</td>
-        <td class="number">${money(row.marketValue)}</td>
-        <td><span class="status-badge ${row.status}">${statusLabel(row.status)}</span></td>
-        <td class="number">${price(row.latestClose)}</td>
-        <td class="number">${price(row.latestMa50)}</td>
-        <td class="number ${distanceClass}">${distance}</td>
-        <td><div class="session-list">${row.recentDays.map(sessionMarkup).join('')}</div></td>
+        <td class="number value-column" title="${escapeHtml(money(row.marketValue))}">${compactMoney(row.marketValue)}</td>
+        <td class="status-column"><span class="status-badge ${row.status}"><span class="status-long">${statusLabel(row.status)}</span><span class="status-short">${row.status === 'match' ? 'Below' : statusLabel(row.status)}</span></span></td>
+        <td class="number latest-column">${price(row.latestClose)}</td>
+        <td class="number ma50-column">${price(row.latestMa50)}</td>
+        <td class="number distance-column ${distanceClass}">${distance}</td>
+        <td class="sessions-column"><div class="session-list">${row.recentDays.map(sessionMarkup).join('')}</div></td>
       </tr>`
   }).join('')
 }
@@ -260,7 +270,7 @@ async function loadScan(force = false) {
     elements.updatedAt.textContent = 'Scan unavailable'
     elements.body.hidden = false
     elements.empty.hidden = true
-    elements.body.innerHTML = `<tr class="error-row"><td colspan="8">${escapeHtml(error.message)}. Try Refresh scan again.</td></tr>`
+    elements.body.innerHTML = `<tr class="error-row"><td colspan="7">${escapeHtml(error.message)}. Try Refresh scan again.</td></tr>`
   } finally {
     elements.refresh.disabled = false
     elements.refresh.classList.remove('loading')
