@@ -9,7 +9,10 @@ latest three valid trading-session closes is below the simple 50-session moving
 average for that day.
 
 Tap or press Enter on any result row to open its completed-session close and
-MA50 curve in a responsive side panel.
+MA50 curves in a responsive side panel. Both lines cover the same latest 60
+valid sessions; additional earlier history is used to seed the moving average.
+Sortable result headers include symbol, market value, status, latest close,
+MA50 and distance from MA50.
 
 ## Signal semantics
 

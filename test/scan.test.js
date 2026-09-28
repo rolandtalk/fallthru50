@@ -75,3 +75,14 @@ test('builds a price curve with MA50 after fifty valid closes', () => {
   assert.equal(chart.points[49].ma50, 124.5)
   assert.equal(chart.latestMa50, 126.5)
 })
+
+test('uses earlier history to extend MA50 across the full displayed curve', () => {
+  const points = dates(120).map((date, index) => ({ date, close: 100 + index }))
+  const chart = buildPriceMa50Series(points)
+
+  assert.equal(chart.historyDayCount, 120)
+  assert.equal(chart.validDayCount, 60)
+  assert.equal(chart.points[0].date, points[60].date)
+  assert.equal(chart.points[0].ma50, 135.5)
+  assert.equal(chart.points.every(point => point.ma50 != null), true)
+})

@@ -235,6 +235,25 @@ th {
   white-space: nowrap;
 }
 
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+th.number .sort-button { justify-content: flex-end; }
+.sort-button:hover, .sort-button.active { color: var(--text); }
+.sort-button:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 2px; }
+.sort-indicator { width: 10px; color: var(--blue); font-size: 12px; line-height: 1; }
+
 td {
   padding: 12px 13px;
   border-bottom: 1px solid var(--border-soft);

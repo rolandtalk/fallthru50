@@ -14,6 +14,7 @@ const HOLDINGS_URL = process.env.PORTANAHUNG_API_URL
   || `${UPSTREAM_BASE_URL}/api/holdings/growth`
 const CACHE_TTL_MS = Math.max(0, Number(process.env.CACHE_TTL_SECONDS || 300)) * 1000
 const REQUEST_TIMEOUT_MS = Math.max(1000, Number(process.env.REQUEST_TIMEOUT_MS || 45000))
+const CHART_HISTORY_LIMIT = 120
 const root = path.dirname(fileURLToPath(import.meta.url))
 
 let cache = null
@@ -61,10 +62,6 @@ async function fetchScan() {
         `${UPSTREAM_BASE_URL}/api/holdings/symbol/${encodeURIComponent(symbol)}`,
       )
       const points = Array.isArray(detail?.points) ? detail.points : []
-      chartCache.set(symbol, {
-        expiresAt: Date.now() + CACHE_TTL_MS,
-        data: { symbol, ...buildPriceMa50Series(points), source: detail.source ?? null },
-      })
       return {
         ...holding,
         chartDates: points.map(point => point.date),
@@ -88,7 +85,7 @@ async function getSymbolChart(symbol) {
   if (cached && Date.now() < cached.expiresAt) return { ...cached.data, cached: true }
 
   const detail = await fetchJson(
-    `${UPSTREAM_BASE_URL}/api/holdings/symbol/${encodeURIComponent(symbol)}`,
+    `${UPSTREAM_BASE_URL}/api/holdings/symbol/${encodeURIComponent(symbol)}?limit=${CHART_HISTORY_LIMIT}`,
   )
   const data = {
     symbol,

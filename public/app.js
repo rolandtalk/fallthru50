@@ -2,6 +2,8 @@ const state = {
   rows: [],
   filter: 'all',
   query: '',
+  sortKey: 'marketValue',
+  sortDirection: 'desc',
 }
 
 const elements = {
@@ -11,6 +13,7 @@ const elements = {
   empty: document.querySelector('#empty-state'),
   search: document.querySelector('#search-input'),
   filters: [...document.querySelectorAll('.filter')],
+  sorters: [...document.querySelectorAll('.sort-button')],
   matches: document.querySelector('#match-count'),
   clear: document.querySelector('#clear-count'),
   unknown: document.querySelector('#unknown-count'),
@@ -73,15 +76,47 @@ function statusLabel(status) {
 
 function visibleRows() {
   const query = state.query.trim().toUpperCase()
-  return state.rows.filter(row => {
+  const statusOrder = { match: 0, unknown: 1, clear: 2 }
+  const rows = state.rows.filter(row => {
     const filterMatch = state.filter === 'all' || row.status === state.filter
     const searchMatch = !query || row.symbol.includes(query)
     return filterMatch && searchMatch
+  })
+
+  return rows.sort((left, right) => {
+    const leftValue = state.sortKey === 'status' ? statusOrder[left.status] : left[state.sortKey]
+    const rightValue = state.sortKey === 'status' ? statusOrder[right.status] : right[state.sortKey]
+    const leftMissing = leftValue == null || (typeof leftValue === 'number' && !Number.isFinite(leftValue))
+    const rightMissing = rightValue == null || (typeof rightValue === 'number' && !Number.isFinite(rightValue))
+
+    if (leftMissing !== rightMissing) return leftMissing ? 1 : -1
+    let comparison = 0
+    if (typeof leftValue === 'string' || typeof rightValue === 'string') {
+      comparison = String(leftValue).localeCompare(String(rightValue))
+    } else {
+      comparison = leftValue - rightValue
+    }
+    if (comparison === 0) return left.rank - right.rank
+    return state.sortDirection === 'asc' ? comparison : -comparison
+  })
+}
+
+function updateSortHeaders() {
+  elements.sorters.forEach(button => {
+    const active = button.dataset.sort === state.sortKey
+    const header = button.closest('th')
+    const indicator = button.querySelector('.sort-indicator')
+    header.setAttribute('aria-sort', active
+      ? state.sortDirection === 'asc' ? 'ascending' : 'descending'
+      : 'none')
+    button.classList.toggle('active', active)
+    indicator.textContent = active ? state.sortDirection === 'asc' ? '↑' : '↓' : ''
   })
 }
 
 function render() {
   const rows = visibleRows()
+  updateSortHeaders()
   elements.empty.hidden = rows.length !== 0
   elements.body.hidden = rows.length === 0
   elements.body.innerHTML = rows.map(row => {
@@ -240,6 +275,16 @@ elements.search.addEventListener('input', event => {
 elements.filters.forEach(button => button.addEventListener('click', () => {
   state.filter = button.dataset.filter
   elements.filters.forEach(filter => filter.classList.toggle('active', filter === button))
+  render()
+}))
+elements.sorters.forEach(button => button.addEventListener('click', () => {
+  const key = button.dataset.sort
+  if (state.sortKey === key) {
+    state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc'
+  } else {
+    state.sortKey = key
+    state.sortDirection = key === 'symbol' || key === 'status' ? 'asc' : 'desc'
+  }
   render()
 }))
 elements.body.addEventListener('click', event => {

@@ -78,12 +78,12 @@
             <thead>
               <tr>
                 <th class="rank">#</th>
-                <th>Symbol</th>
-                <th class="number">Market Value</th>
-                <th>Status</th>
-                <th class="number">Latest</th>
-                <th class="number">MA50</th>
-                <th class="number">vs MA50</th>
+                <th data-sort-header="symbol" aria-sort="none"><button class="sort-button" type="button" data-sort="symbol">Symbol <span class="sort-indicator" aria-hidden="true"></span></button></th>
+                <th class="number" data-sort-header="marketValue" aria-sort="descending"><button class="sort-button" type="button" data-sort="marketValue">Market Value <span class="sort-indicator" aria-hidden="true">↓</span></button></th>
+                <th data-sort-header="status" aria-sort="none"><button class="sort-button" type="button" data-sort="status">Status <span class="sort-indicator" aria-hidden="true"></span></button></th>
+                <th class="number" data-sort-header="latestClose" aria-sort="none"><button class="sort-button" type="button" data-sort="latestClose">Latest <span class="sort-indicator" aria-hidden="true"></span></button></th>
+                <th class="number" data-sort-header="latestMa50" aria-sort="none"><button class="sort-button" type="button" data-sort="latestMa50">MA50 <span class="sort-indicator" aria-hidden="true"></span></button></th>
+                <th class="number" data-sort-header="distancePct" aria-sort="none"><button class="sort-button" type="button" data-sort="distancePct">vs MA50 <span class="sort-indicator" aria-hidden="true"></span></button></th>
                 <th>Latest 3 Sessions</th>
               </tr>
             </thead>
@@ -126,7 +126,7 @@
         <div class="chart-loading" id="chart-loading"><span class="spinner"></span>Loading curve…</div>
         <svg id="price-chart" viewBox="0 0 760 390" role="img" aria-label="Stock close and MA50 curves"></svg>
       </div>
-      <p class="chart-note">The MA50 line begins once 50 valid closes are available. Missing sessions are excluded.</p>
+      <p class="chart-note">Both curves cover the same 60 valid sessions. Earlier closes seed MA50; missing sessions are excluded.</p>
     </aside>
     <script type="module" src="/app.js"></script>
   </body>
