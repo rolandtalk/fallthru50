@@ -1,7 +1,11 @@
 import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { buildTop20Scan, selectTop20Holdings } from './lib/scan.js'
+import {
+  buildAllHoldingsScan,
+  buildPriceMa50Series,
+  selectAllHoldings,
+} from './lib/scan.js'
 
 const PORT = Number(process.env.PORT || 3000)
 const UPSTREAM_BASE_URL = (process.env.PORTANAHUNG_API_BASE_URL
@@ -15,6 +19,7 @@ const root = path.dirname(fileURLToPath(import.meta.url))
 let cache = null
 let cacheExpiresAt = 0
 let pendingScan = null
+const chartCache = new Map()
 
 async function fetchJson(url) {
   const response = await fetch(url, {
@@ -48,14 +53,18 @@ async function mapWithConcurrency(items, concurrency, worker) {
 
 async function fetchScan() {
   const payload = await fetchJson(HOLDINGS_URL)
-  const top20 = selectTop20Holdings(payload)
-  const withHistory = await mapWithConcurrency(top20, 5, async holding => {
+  const holdings = selectAllHoldings(payload)
+  const withHistory = await mapWithConcurrency(holdings, 8, async holding => {
     const symbol = String(holding.symbol).toUpperCase()
     try {
       const detail = await fetchJson(
         `${UPSTREAM_BASE_URL}/api/holdings/symbol/${encodeURIComponent(symbol)}`,
       )
       const points = Array.isArray(detail?.points) ? detail.points : []
+      chartCache.set(symbol, {
+        expiresAt: Date.now() + CACHE_TTL_MS,
+        data: { symbol, ...buildPriceMa50Series(points), source: detail.source ?? null },
+      })
       return {
         ...holding,
         chartDates: points.map(point => point.date),
@@ -71,7 +80,23 @@ async function fetchScan() {
     }
   })
 
-  return buildTop20Scan({ ...payload, holdings: withHistory })
+  return buildAllHoldingsScan({ ...payload, holdings: withHistory })
+}
+
+async function getSymbolChart(symbol) {
+  const cached = chartCache.get(symbol)
+  if (cached && Date.now() < cached.expiresAt) return { ...cached.data, cached: true }
+
+  const detail = await fetchJson(
+    `${UPSTREAM_BASE_URL}/api/holdings/symbol/${encodeURIComponent(symbol)}`,
+  )
+  const data = {
+    symbol,
+    ...buildPriceMa50Series(detail?.points),
+    source: detail?.source ?? null,
+  }
+  chartCache.set(symbol, { expiresAt: Date.now() + CACHE_TTL_MS, data })
+  return { ...data, cached: false }
 }
 
 async function getScan(force = false) {
@@ -102,6 +127,22 @@ app.get('/api/scan', async (request, response) => {
   } catch (error) {
     response.status(502).json({
       error: 'Unable to complete the MA50 scan',
+      detail: error instanceof Error ? error.message : String(error),
+    })
+  }
+})
+
+app.get('/api/chart/:symbol', async (request, response) => {
+  const symbol = String(request.params.symbol || '').trim().toUpperCase()
+  if (!/^[A-Z0-9.^=_:-]{1,32}$/.test(symbol)) {
+    return response.status(400).json({ error: 'Invalid symbol' })
+  }
+  try {
+    response.set('Cache-Control', 'no-store')
+    return response.json(await getSymbolChart(symbol))
+  } catch (error) {
+    return response.status(502).json({
+      error: `Unable to load ${symbol} chart`,
       detail: error instanceof Error ? error.message : String(error),
     })
   }

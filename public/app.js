@@ -15,6 +15,16 @@ const elements = {
   clear: document.querySelector('#clear-count'),
   unknown: document.querySelector('#unknown-count'),
   total: document.querySelector('#total-count'),
+  panel: document.querySelector('#chart-panel'),
+  backdrop: document.querySelector('#chart-backdrop'),
+  panelClose: document.querySelector('#chart-close'),
+  chartTitle: document.querySelector('#chart-title'),
+  chartAsOf: document.querySelector('#chart-as-of'),
+  chartCloseValue: document.querySelector('#chart-close-value'),
+  chartMa50Value: document.querySelector('#chart-ma50-value'),
+  chartDistanceValue: document.querySelector('#chart-distance-value'),
+  chartLoading: document.querySelector('#chart-loading'),
+  chartSvg: document.querySelector('#price-chart'),
 }
 
 function money(value) {
@@ -78,7 +88,7 @@ function render() {
     const distanceClass = row.distancePct == null ? '' : row.distancePct < 0 ? 'negative' : 'positive'
     const distance = row.distancePct == null ? '—' : `${row.distancePct > 0 ? '+' : ''}${row.distancePct.toFixed(2)}%`
     return `
-      <tr title="${escapeHtml(row.reason)}">
+      <tr class="stock-row" data-symbol="${escapeHtml(row.symbol)}" tabindex="0" title="Open ${escapeHtml(row.symbol)} price and MA50 curve">
         <td class="rank">${row.rank}</td>
         <td class="symbol">${escapeHtml(row.symbol)}</td>
         <td class="number">${money(row.marketValue)}</td>
@@ -89,6 +99,106 @@ function render() {
         <td><div class="session-list">${row.recentDays.map(sessionMarkup).join('')}</div></td>
       </tr>`
   }).join('')
+}
+
+function svgPath(values, xScale, yScale) {
+  let path = ''
+  let drawing = false
+  values.forEach((value, index) => {
+    if (!Number.isFinite(value)) {
+      drawing = false
+      return
+    }
+    path += `${drawing ? 'L' : 'M'}${xScale(index).toFixed(1)},${yScale(value).toFixed(1)} `
+    drawing = true
+  })
+  return path.trim()
+}
+
+function renderChart(data) {
+  const points = Array.isArray(data.points) ? data.points : []
+  if (!points.length) throw new Error('No valid price history')
+
+  const width = 760
+  const height = 390
+  const margin = { top: 22, right: 18, bottom: 42, left: 58 }
+  const plotWidth = width - margin.left - margin.right
+  const plotHeight = height - margin.top - margin.bottom
+  const values = points.flatMap(point => [point.close, point.ma50]).filter(Number.isFinite)
+  let minValue = Math.min(...values)
+  let maxValue = Math.max(...values)
+  const padding = Math.max((maxValue - minValue) * .1, maxValue * .01, 1)
+  minValue -= padding
+  maxValue += padding
+  const xScale = index => margin.left + (index / Math.max(points.length - 1, 1)) * plotWidth
+  const yScale = value => margin.top + ((maxValue - value) / (maxValue - minValue)) * plotHeight
+
+  const grid = Array.from({ length: 5 }, (_, index) => {
+    const ratio = index / 4
+    const y = margin.top + ratio * plotHeight
+    const value = maxValue - ratio * (maxValue - minValue)
+    return `<line class="chart-grid" x1="${margin.left}" y1="${y}" x2="${width - margin.right}" y2="${y}"/><text class="chart-axis" x="${margin.left - 8}" y="${y + 3}" text-anchor="end">${price(value)}</text>`
+  }).join('')
+
+  const dateIndexes = [...new Set([0, Math.floor((points.length - 1) / 2), points.length - 1])]
+  const dateLabels = dateIndexes.map(index => `<text class="chart-axis" x="${xScale(index)}" y="${height - 15}" text-anchor="middle">${escapeHtml(points[index].date.slice(5))}</text>`).join('')
+  const closePath = svgPath(points.map(point => point.close), xScale, yScale)
+  const ma50Path = svgPath(points.map(point => point.ma50), xScale, yScale)
+  const last = points.at(-1)
+
+  elements.chartSvg.innerHTML = `${grid}${dateLabels}<path class="chart-price" d="${closePath}"/><path class="chart-ma50" d="${ma50Path}"/>${Number.isFinite(last.close) ? `<circle class="chart-latest" cx="${xScale(points.length - 1)}" cy="${yScale(last.close)}" r="5"/>` : ''}`
+}
+
+function openPanelShell(symbol) {
+  elements.backdrop.hidden = false
+  requestAnimationFrame(() => {
+    elements.backdrop.classList.add('open')
+    elements.panel.classList.add('open')
+  })
+  elements.panel.setAttribute('aria-hidden', 'false')
+  document.body.classList.add('panel-open')
+  elements.chartTitle.textContent = symbol
+  elements.chartAsOf.textContent = 'Loading completed-session history…'
+  elements.chartCloseValue.textContent = '—'
+  elements.chartMa50Value.textContent = '—'
+  elements.chartDistanceValue.textContent = '—'
+  elements.chartDistanceValue.className = ''
+  elements.chartSvg.innerHTML = ''
+  elements.chartLoading.hidden = false
+  elements.panelClose.focus()
+}
+
+async function showChart(symbol) {
+  openPanelShell(symbol)
+  try {
+    const response = await fetch(`/api/chart/${encodeURIComponent(symbol)}`)
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.detail || data.error || `HTTP ${response.status}`)
+    if (elements.chartTitle.textContent !== symbol) return
+
+    const distance = Number.isFinite(data.latestMa50) && data.latestMa50 !== 0
+      ? ((data.latestClose / data.latestMa50) - 1) * 100
+      : null
+    elements.chartAsOf.textContent = `${data.validDayCount} valid sessions · as of ${data.asOf || 'unknown'}`
+    elements.chartCloseValue.textContent = price(data.latestClose)
+    elements.chartMa50Value.textContent = price(data.latestMa50)
+    elements.chartDistanceValue.textContent = distance == null ? '—' : `${distance > 0 ? '+' : ''}${distance.toFixed(2)}%`
+    elements.chartDistanceValue.className = distance == null ? '' : distance < 0 ? 'negative' : 'positive'
+    renderChart(data)
+    elements.chartLoading.hidden = true
+  } catch (error) {
+    elements.chartLoading.hidden = true
+    elements.chartSvg.innerHTML = `<text class="chart-error" x="380" y="195">${escapeHtml(error.message)}</text>`
+    elements.chartAsOf.textContent = 'Curve unavailable'
+  }
+}
+
+function closeChart() {
+  elements.panel.classList.remove('open')
+  elements.backdrop.classList.remove('open')
+  elements.panel.setAttribute('aria-hidden', 'true')
+  document.body.classList.remove('panel-open')
+  window.setTimeout(() => { elements.backdrop.hidden = true }, 220)
 }
 
 async function loadScan(force = false) {
@@ -132,5 +242,21 @@ elements.filters.forEach(button => button.addEventListener('click', () => {
   elements.filters.forEach(filter => filter.classList.toggle('active', filter === button))
   render()
 }))
+elements.body.addEventListener('click', event => {
+  const row = event.target.closest('.stock-row')
+  if (row) showChart(row.dataset.symbol)
+})
+elements.body.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  const row = event.target.closest('.stock-row')
+  if (!row) return
+  event.preventDefault()
+  showChart(row.dataset.symbol)
+})
+elements.panelClose.addEventListener('click', closeChart)
+elements.backdrop.addEventListener('click', closeChart)
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && elements.panel.classList.contains('open')) closeChart()
+})
 
 loadScan()

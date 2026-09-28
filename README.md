@@ -1,12 +1,15 @@
 # fallthru50
 
-`fallthru50` scans the 20 largest aggregated positions from
+`fallthru50` scans every unique aggregated position from
 [`rolandtalk/portanahung2026apr`](https://github.com/rolandtalk/portanahung2026apr).
 
-The target universe is ranked dynamically by current holding market value
-(`aggregated shares × latest close`). A symbol matches when at least one of its
+The complete target universe is ranked dynamically by current holding market
+value (`aggregated shares × latest close`). A symbol matches when at least one of its
 latest three valid trading-session closes is below the simple 50-session moving
 average for that day.
+
+Tap or press Enter on any result row to open its completed-session close and
+MA50 curve in a responsive side panel.
 
 ## Signal semantics
 
