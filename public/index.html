@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d1117">
+    <meta name="description" content="Scan the largest Portanahung holdings for closes below MA50.">
+    <title>fallthru50</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">PORTANAHUNG · TOP 20</p>
+          <h1>fallthru<span>50</span></h1>
+          <p class="subtitle">Find large positions that closed below their 50-day average in any of the latest three trading sessions.</p>
+        </div>
+        <button class="refresh-button" id="refresh-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5M6.1 9a7 7 0 0 1 11.8-2.4L20 11M4 13l2.1 4.4A7 7 0 0 0 18 15"/></svg>
+          <span>Refresh scan</span>
+        </button>
+      </header>
+
+      <section class="status-line" aria-live="polite">
+        <span class="status-dot"></span>
+        <span id="updated-at">Loading current scan…</span>
+      </section>
+
+      <section class="metric-grid" aria-label="Scan summary">
+        <article class="metric-card primary">
+          <p>Below MA50</p>
+          <strong id="match-count">—</strong>
+          <span>matched positions</span>
+        </article>
+        <article class="metric-card">
+          <p>Clear</p>
+          <strong id="clear-count">—</strong>
+          <span>above on all 3 days</span>
+        </article>
+        <article class="metric-card">
+          <p>Unknown</p>
+          <strong id="unknown-count">—</strong>
+          <span>insufficient history</span>
+        </article>
+        <article class="metric-card">
+          <p>Universe</p>
+          <strong id="total-count">20</strong>
+          <span>largest positions</span>
+        </article>
+      </section>
+
+      <section class="rule-card">
+        <div class="rule-icon">50</div>
+        <div>
+          <h2>Scan rule</h2>
+          <p>Match when <b>at least one</b> of the latest three valid trading-session closes is below that session’s simple MA50. Weekends, holidays and missing closes are ignored. Fewer than 50 valid closes returns <b>Unknown</b>.</p>
+        </div>
+      </section>
+
+      <section class="results-card">
+        <div class="results-toolbar">
+          <div class="filter-group" role="group" aria-label="Filter results">
+            <button class="filter active" type="button" data-filter="all">All</button>
+            <button class="filter" type="button" data-filter="match">Below MA50</button>
+            <button class="filter" type="button" data-filter="unknown">Unknown</button>
+          </div>
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <span class="sr-only">Search ticker</span>
+            <input id="search-input" type="search" placeholder="Search ticker" autocomplete="off">
+          </label>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="rank">#</th>
+                <th>Symbol</th>
+                <th class="number">Market Value</th>
+                <th>Status</th>
+                <th class="number">Latest</th>
+                <th class="number">MA50</th>
+                <th class="number">vs MA50</th>
+                <th>Latest 3 Sessions</th>
+              </tr>
+            </thead>
+            <tbody id="results-body">
+              <tr><td class="loading-cell" colspan="8"><span class="spinner"></span>Running scan…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="empty-state" id="empty-state" hidden>No symbols match this view.</p>
+      </section>
+
+      <footer>
+        <p>Targets are dynamically ranked by aggregated holding market value from portanahung2026apr.</p>
+        <a href="https://github.com/rolandtalk/portanahung2026apr" target="_blank" rel="noreferrer">Source portfolio ↗</a>
+      </footer>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
