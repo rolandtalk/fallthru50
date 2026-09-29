@@ -88,7 +88,16 @@ h1 span { color: var(--red); }
   transition: border-color .15s, background .15s, transform .15s;
 }
 
-.remark-button img { display: block; width: 28px; height: 28px; }
+.remark-button svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .remark-button:hover { border-color: #6e7681; background: #1c2128; }
 .remark-button:active { transform: translateY(1px); }
 .remark-button[aria-expanded="true"] { border-color: var(--blue); background: rgba(88, 166, 255, .12); }
