@@ -222,7 +222,7 @@ h1 span { color: var(--red); }
 .search-box input::placeholder { color: #6e7681; }
 
 .table-wrap { overflow-x: auto; }
-table { width: 100%; min-width: 920px; border-collapse: collapse; }
+table { width: 100%; min-width: 830px; border-collapse: collapse; }
 th {
   padding: 11px 13px;
   border-bottom: 1px solid var(--border);
@@ -267,8 +267,9 @@ tbody tr:hover td { background: #1c2128; }
 .stock-row { cursor: pointer; }
 .stock-row:focus { outline: 2px solid var(--blue); outline-offset: -2px; }
 .stock-row:focus td { background: #1c2128; }
-.rank { width: 38px; color: #6e7681; }
 .number { text-align: right; font-variant-numeric: tabular-nums; }
+.value-column { width: 84px; }
+.distance-column { width: 86px; }
 .symbol { color: var(--blue); font-size: 14px; font-weight: 750; letter-spacing: .02em; }
 
 .status-badge {
@@ -394,6 +395,7 @@ body.panel-open { overflow: hidden; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
   .results-toolbar { align-items: stretch; flex-direction: column; }
   .search-box { width: 100%; }
+  th, td { padding-right: 9px; padding-left: 9px; }
   footer { flex-direction: column; }
   .chart-panel { width: 100%; padding: 20px 14px; }
   .chart-metrics { gap: 6px; }
