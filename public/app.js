@@ -140,10 +140,10 @@ function render() {
       <tr class="stock-row" data-symbol="${escapeHtml(row.symbol)}" tabindex="0" title="Open ${escapeHtml(row.symbol)} price and MA50 curve">
         <td class="symbol">${escapeHtml(row.symbol)}</td>
         <td class="number value-column" title="${escapeHtml(money(row.marketValue))}">${compactMoney(row.marketValue)}</td>
+        <td class="number distance-column ${distanceClass}">${distance}</td>
         <td class="status-column"><span class="status-badge ${row.status}">${statusLabel(row.status)}</span></td>
         <td class="number latest-column">${price(row.latestClose)}</td>
         <td class="number ma50-column">${price(row.latestMa50)}</td>
-        <td class="number distance-column ${distanceClass}">${distance}</td>
         <td class="sessions-column"><div class="session-list">${row.recentDays.map(sessionMarkup).join('')}</div></td>
       </tr>`
   }).join('')
