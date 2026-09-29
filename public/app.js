@@ -14,6 +14,9 @@ const elements = {
   search: document.querySelector('#search-input'),
   filters: [...document.querySelectorAll('.filter')],
   sorters: [...document.querySelectorAll('.sort-button')],
+  remarkControl: document.querySelector('#remark-control'),
+  remarkButton: document.querySelector('#remark-button'),
+  remarkCard: document.querySelector('#app-remark'),
   matches: document.querySelector('#match-count'),
   clear: document.querySelector('#clear-count'),
   unknown: document.querySelector('#unknown-count'),
@@ -246,6 +249,11 @@ function closeChart() {
   window.setTimeout(() => { elements.backdrop.hidden = true }, 220)
 }
 
+function setRemarkOpen(open) {
+  elements.remarkCard.hidden = !open
+  elements.remarkButton.setAttribute('aria-expanded', String(open))
+}
+
 async function loadScan(force = false) {
   elements.refresh.disabled = true
   elements.refresh.classList.add('loading')
@@ -278,6 +286,12 @@ async function loadScan(force = false) {
 }
 
 elements.refresh.addEventListener('click', () => loadScan(true))
+elements.remarkButton.addEventListener('click', () => {
+  setRemarkOpen(elements.remarkButton.getAttribute('aria-expanded') !== 'true')
+})
+document.addEventListener('click', event => {
+  if (!elements.remarkControl.contains(event.target)) setRemarkOpen(false)
+})
 elements.search.addEventListener('input', event => {
   state.query = event.target.value
   render()
@@ -311,7 +325,12 @@ elements.body.addEventListener('keydown', event => {
 elements.panelClose.addEventListener('click', closeChart)
 elements.backdrop.addEventListener('click', closeChart)
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && elements.panel.classList.contains('open')) closeChart()
+  if (event.key !== 'Escape') return
+  if (elements.remarkButton.getAttribute('aria-expanded') === 'true') {
+    setRemarkOpen(false)
+    elements.remarkButton.focus()
+  }
+  if (elements.panel.classList.contains('open')) closeChart()
 })
 
 loadScan()
