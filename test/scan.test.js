@@ -1,6 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTop20Scan, calculateFallThru50 } from '../lib/scan.js'
+import {
+  buildAllHoldingsScan,
+  buildPriceMa50Series,
+  calculateFallThru50,
+} from '../lib/scan.js'
 
 function dates(count) {
   return Array.from({ length: count }, (_, index) => `2026-01-${String(index + 1).padStart(2, '0')}`)
@@ -47,16 +51,38 @@ test('ignores missing closes when selecting the latest three trading sessions', 
   assert.deepEqual(result.recentDays.map(day => day.date), [allDates[51], allDates[53], allDates[54]])
 })
 
-test('ranks holdings by market value and limits the universe to 20', () => {
+test('ranks and scans every holding instead of limiting the universe to 20', () => {
   const chartDates = dates(52)
   const holdings = Array.from({ length: 24 }, (_, index) => ({
     symbol: `S${String(index).padStart(2, '0')}`,
     marketValue: index * 100,
     chartCloses: Array.from({ length: 52 }, () => 100),
   }))
-  const scan = buildTop20Scan({ chartDates, holdings, asOf: '2026-09-28' })
+  const scan = buildAllHoldingsScan({ chartDates, holdings, asOf: '2026-09-28' })
 
-  assert.equal(scan.rows.length, 20)
+  assert.equal(scan.rows.length, 24)
   assert.equal(scan.rows[0].symbol, 'S23')
-  assert.equal(scan.rows.at(-1).symbol, 'S04')
+  assert.equal(scan.rows.at(-1).symbol, 'S00')
+})
+
+test('builds a price curve with MA50 after fifty valid closes', () => {
+  const points = dates(52).map((date, index) => ({ date, close: 100 + index }))
+  points.splice(5, 0, { date: 'missing', close: null })
+  const chart = buildPriceMa50Series(points)
+
+  assert.equal(chart.validDayCount, 52)
+  assert.equal(chart.points[48].ma50, null)
+  assert.equal(chart.points[49].ma50, 124.5)
+  assert.equal(chart.latestMa50, 126.5)
+})
+
+test('uses earlier history to extend MA50 across the full displayed curve', () => {
+  const points = dates(120).map((date, index) => ({ date, close: 100 + index }))
+  const chart = buildPriceMa50Series(points)
+
+  assert.equal(chart.historyDayCount, 120)
+  assert.equal(chart.validDayCount, 60)
+  assert.equal(chart.points[0].date, points[60].date)
+  assert.equal(chart.points[0].ma50, 135.5)
+  assert.equal(chart.points.every(point => point.ma50 != null), true)
 })

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Scan the 20 largest Portanahung holdings for closes below MA50 in the latest three trading sessions.",
+  "description": "Scan all Portanahung holdings for closes below MA50 in the latest three trading sessions.",
   "scripts": {
     "start": "node server.js",
     "test": "node --test"
